@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const successMessage = document.getElementById('success-message');
 
     // Replace this URL with your own Apps Script deployment URL
-    const scriptUrl = 'YOUR_GOOGLE_APPS_SCRIPT_URL';
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxAjGzRekpiG6tOHr2v4-11No7BKwBt56i9Sd94GJHgte7Xh7zi9F2YJZAKvv2K-hwW/exec';
 
     form.addEventListener('submit', function(event) {
         event.preventDefault();
