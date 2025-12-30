@@ -1,45 +1,58 @@
 /*
- * Client‑side script for submitting the insurance form to a Google Apps Script web app.
+ * Client-side script for submitting the insurance form to a Google Apps Script web app.
  *
- * How to use:
- * 1. Create a Google Sheets document and write an Apps Script (Tools → Script Editor) that exposes a doPost(e) function.
- * 2. Deploy it as a web app (Deploy → New deployment → Web app) and set access to "Anyone" or "Anyone with the link".
- * 3. Copy the deployment URL and paste it into the scriptUrl constant below.
- *
- * The Apps Script should extract data from e.postData.contents (JSON) and append it to your sheet.
+ * Replace the value of `scriptUrl` with the deployment URL of your
+ * Google Apps Script web application (ending in `/exec`). When the form is
+ * submitted, the script gathers all form values into a URLSearchParams object
+ * and posts them to your Apps Script. The Apps Script should read the
+ * parameters from `e.parameter` and append them to your Google Sheet
+ * accordingly.
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('insurance-form');
-    const successMessage = document.getElementById('success-message');
+document.addEventListener('DOMContentLoaded', function () {
+  // Get the form element by its ID
+  const form = document.getElementById('insurance-form');
 
-    // Replace this URL with your own Apps Script deployment URL
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbxAjGzRekpiG6tOHr2v4-11No7BKwBt56i9Sd94GJHgte7Xh7zi9F2YJZAKvv2K-hwW/exec';
+  // TODO: Replace this with your own Apps Script deployment URL (ending with /exec)
+  const scriptUrl = 'https://script.google.com/macros/s/AKfycbxAjGzRekpiG6tOHr2v4-11No7BKwBt56i9Sd94GJHgte7Xh7zi9F2YJZAKvv2K-hwW/exec';
 
-    form.addEventListener('submit', function(event) {
-        event.preventDefault();
-        const formData = new FormData(form);
-        const data = {};
-        formData.forEach((value, key) => {
-            data[key] = value;
-        });
+  // Intercept the form submission to send the data via fetch()
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
 
-        // Send a POST request to the Apps Script URL
-        fetch(scriptUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        }).then(() => {
-            form.reset();
-            successMessage.classList.remove('hidden');
-            // Optionally, hide the message after a few seconds
-            setTimeout(() => successMessage.classList.add('hidden'), 8000);
-        }).catch(err => {
-            console.error('Error submitting form', err);
-            alert('제출 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
-        });
+    // Collect form data into a URLSearchParams object
+    const formData = new URLSearchParams({
+      fullName: document.getElementById('fullName').value,
+      dob: document.getElementById('dob').value,
+      passport: document.getElementById('passport').value,
+      departureDate: document.getElementById('departureDate').value,
+      returnDate: document.getElementById('returnDate').value,
+      travelDays: document.getElementById('travelDays').value,
+      program: document.getElementById('program').value,
+      insuredPeople: document.getElementById('insuredPeople').value,
+      address: document.getElementById('address').value,
+      bankName: document.getElementById('bankName').value,
+      bankAccount: document.getElementById('bankAccount').value,
+      paymentReference: document.getElementById('paymentReference').value
     });
+
+    // Send a POST request to the Apps Script URL
+    fetch(scriptUrl, {
+      method: 'POST',
+      body: formData
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.ok) {
+          // Success: show a confirmation and reset the form
+          alert('Gửi thành công! Dữ liệu đã lưu vào Google Sheets.');
+          form.reset();
+        } else {
+          alert('Có lỗi: ' + (data.error || 'unknown'));
+        }
+      })
+      .catch((err) => {
+        alert('Không gửi được: ' + err);
+      });
+  });
 });
